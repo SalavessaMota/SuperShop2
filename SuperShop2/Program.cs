@@ -1,36 +1,49 @@
-namespace SuperShop2
+using Microsoft.EntityFrameworkCore;
+using SuperShop2.Data;
+
+namespace SuperShop2;
+
+public class Program
 {
-    public class Program
+    public static void Main(string[] args)
     {
-        public static void Main(string[] args)
+        var builder = WebApplication.CreateBuilder(args);
+
+        // Load configuration
+        var configuration = builder.Configuration;
+
+        // Add services to the container.
+        builder.Services.AddControllersWithViews();
+
+        builder.Services.AddDbContext<DataContext>(cfg =>
         {
-            var builder = WebApplication.CreateBuilder(args);
+            cfg.UseSqlServer(configuration.GetConnectionString("DefaultConnection"));
+        });
 
-            // Add services to the container.
-            builder.Services.AddControllersWithViews();
 
-            var app = builder.Build();
 
-            // Configure the HTTP request pipeline.
-            if (!app.Environment.IsDevelopment())
-            {
-                app.UseExceptionHandler("/Home/Error");
-                // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-                app.UseHsts();
-            }
 
-            app.UseHttpsRedirection();
-            app.UseStaticFiles();
+        var app = builder.Build();
 
-            app.UseRouting();
-
-            app.UseAuthorization();
-
-            app.MapControllerRoute(
-                name: "default",
-                pattern: "{controller=Home}/{action=Index}/{id?}");
-
-            app.Run();
+        // Configure the HTTP request pipeline.
+        if (!app.Environment.IsDevelopment())
+        {
+            app.UseExceptionHandler("/Home/Error");
+            // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
+            app.UseHsts();
         }
+
+        app.UseHttpsRedirection();
+        app.UseStaticFiles();
+
+        app.UseRouting();
+
+        app.UseAuthorization();
+
+        app.MapControllerRoute(
+            name: "default",
+            pattern: "{controller=Home}/{action=Index}/{id?}");
+
+        app.Run();
     }
 }
