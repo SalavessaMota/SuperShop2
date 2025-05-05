@@ -7,17 +7,17 @@ namespace SuperShop2.Controllers;
 
 public class ProductsController : Controller
 {
-    private readonly DataContext _context;
+    private readonly IProductRepository _productRepository;
 
-    public ProductsController(DataContext context)
+    public ProductsController(IProductRepository productRepository)
     {
-        _context = context;
+        _productRepository = productRepository;
     }
 
     // GET: Products
-    public async Task<IActionResult> Index()
+    public IActionResult Index()
     {
-        return View(await _context.Products.ToListAsync());
+        return View(_productRepository.GetAll());
     }
 
     // GET: Products/Details/5
@@ -28,8 +28,7 @@ public class ProductsController : Controller
             return NotFound();
         }
 
-        var product = await _context.Products
-            .FirstOrDefaultAsync(m => m.Id == id);
+        var product = await _productRepository.GetByIdAsync(id.Value);
         if (product == null)
         {
             return NotFound();
@@ -53,8 +52,7 @@ public class ProductsController : Controller
     {
         if (ModelState.IsValid)
         {
-            _context.Add(product);
-            await _context.SaveChangesAsync();
+            await _productRepository.CreateAsync(product);
             return RedirectToAction(nameof(Index));
         }
         return View(product);
@@ -68,7 +66,7 @@ public class ProductsController : Controller
             return NotFound();
         }
 
-        var product = await _context.Products.FindAsync(id);
+        var product = await _productRepository.GetByIdAsync(id.Value);
         if (product == null)
         {
             return NotFound();
@@ -92,12 +90,11 @@ public class ProductsController : Controller
         {
             try
             {
-                _context.Update(product);
-                await _context.SaveChangesAsync();
+                await _productRepository.UpdateAsync(product);
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!ProductExists(product.Id))
+                if (!await _productRepository.ExistsAsync(product.Id))
                 {
                     return NotFound();
                 }
@@ -119,8 +116,7 @@ public class ProductsController : Controller
             return NotFound();
         }
 
-        var product = await _context.Products
-            .FirstOrDefaultAsync(m => m.Id == id);
+        var product = await _productRepository.GetByIdAsync(id.Value);
         if (product == null)
         {
             return NotFound();
@@ -134,18 +130,11 @@ public class ProductsController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteConfirmed(int id)
     {
-        var product = await _context.Products.FindAsync(id);
+        var product = await _productRepository.GetByIdAsync(id);
         if (product != null)
         {
-            _context.Products.Remove(product);
+            await _productRepository.DeleteAsync(product);
         }
-
-        await _context.SaveChangesAsync();
         return RedirectToAction(nameof(Index));
-    }
-
-    private bool ProductExists(int id)
-    {
-        return _context.Products.Any(e => e.Id == id);
     }
 }
